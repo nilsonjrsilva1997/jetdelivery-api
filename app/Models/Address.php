@@ -20,4 +20,14 @@ class Address extends Model
         'latitude',
         'longitude',
     ];
+
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function delivery_peoples()
+    {
+        return $this->hasMany(DeliveryPeople::class);
+    }
 }
