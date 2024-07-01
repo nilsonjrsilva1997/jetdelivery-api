@@ -10,7 +10,7 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('customer', 'orderStatus', 'deliveryAddress', 'paymentMethod', 'deliveryPerson')->get();
+        $orders = Order::with('customer', 'orderStatus', 'deliveryAddress', 'paymentMethod', 'deliveryPerson', 'restaurant', 'restaurant.address', 'restaurant.category')->get();
         return response()->json($orders);
     }
 
@@ -18,7 +18,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            // 'restaurant_id' => 'required|exists:restaurants,id',
+            'restaurant_id' => 'required|exists:restaurants,id',
             'order_status_id' => 'required|exists:order_statuses,id',
             'delivery_address_id' => 'required|exists:addresses,id',
             'delivery_date' => 'required|date',
@@ -35,7 +35,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        return response()->json($order::with('customer', 'orderStatus', 'deliveryAddress', 'paymentMethod', 'deliveryPerson')->first());
+        return response()->json($order::with('customer', 'orderStatus', 'deliveryAddress', 'paymentMethod', 'deliveryPerson', 'restaurant', 'restaurant.address', 'restaurant.category')->first());
     }
 
     public function update(Request $request, Order $order)

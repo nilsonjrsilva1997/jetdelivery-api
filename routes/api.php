@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DeliveryPeopleController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\IfoodIntegrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -76,10 +79,34 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{order}', [OrderController::class, 'update']);
         Route::delete('/{order}', [OrderController::class, 'destroy']);
     });
+
+    Route::group(['prefix' => 'categories'], function () {
+        Route::get('/', [CategoryController::class, 'index']);
+        Route::post('/', [CategoryController::class, 'store']);
+        Route::get('/{category}', [CategoryController::class, 'show']);
+        Route::put('/{category}', [CategoryController::class, 'update']);
+        Route::delete('/{category}', [CategoryController::class, 'destroy']);
+    });
+
+    Route::group(['prefix' => 'restaurants'], function () {
+        Route::get('/', [RestaurantController::class, 'index']);
+        Route::post('/', [RestaurantController::class, 'store']);
+        Route::get('/{category}', [RestaurantController::class, 'show']);
+        Route::put('/{category}', [RestaurantController::class, 'update']);
+        Route::delete('/{category}', [RestaurantController::class, 'destroy']);
+    });
+
+    Route::group(['prefix' => 'ifood'], function () {
+        Route::post('/user-code', [IfoodIntegrationController::class, 'getOauthUserCode']);
+        Route::post('/token', [IfoodIntegrationController::class, 'getOauthToken']);
+    });
 });
 
 // rotas de autenticação na api
 Route::post('register', [AuthController::class, 'register']);
+Route::post('register_restaurant', [AuthController::class, 'registerRestaurant']);
 Route::post('login', [AuthController::class, 'login']);
+Route::post('login_restaurant', [AuthController::class, 'loginRestaurant']);
+Route::post('login_delivery_people', [AuthController::class, 'loginDeliveryPeople']);
 Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
 Route::middleware('auth:api')->get('user', [AuthController::class, 'user']);
