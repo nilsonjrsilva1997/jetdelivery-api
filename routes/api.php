@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IfoodIntegrationController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +100,14 @@ Route::middleware('auth:api')->group(function () {
     Route::group(['prefix' => 'ifood'], function () {
         Route::post('/user-code', [IfoodIntegrationController::class, 'getOauthUserCode']);
         Route::post('/token', [IfoodIntegrationController::class, 'getOauthToken']);
+        Route::get('/integration-status', [IfoodIntegrationController::class, 'getIntegrationStatus']);
+        Route::get('/orders', [IfoodIntegrationController::class, 'getOrders']);
+    });
+
+    Route::group(['prefix' => 'wallet'], function () {
+        Route::get('/balance', [WalletController::class, 'getBalance']);
+        Route::post('/deposit', [WalletController::class, 'deposit']);
+        Route::post('/withdraw', [WalletController::class, 'withdraw']);
     });
 });
 

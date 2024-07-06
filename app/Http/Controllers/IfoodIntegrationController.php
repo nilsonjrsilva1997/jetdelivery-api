@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\IfoodIntegration;
+use App\Models\IfoodOrder;
 use App\Models\Restaurant;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
@@ -121,5 +122,56 @@ class IfoodIntegrationController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function getIntegrationStatus()
+    {
+        // Verifica se o usuário autenticado possui um restaurante associado
+        $restaurant = Restaurant::whereHas('users', function($query) {
+            $query->where('user_id', Auth::id());
+        })->with('ifood_integration')->first();
+
+        if (!$restaurant) {
+            return response()->json(['error' => 'Usuário não possui um restaurante associado/integração'], 404);
+        }
+
+        // Obtém os dados da integração com iFood
+        $ifoodIntegration = $restaurant->ifood_integration;
+
+        // Verifica se a integração está ativa
+        if ($ifoodIntegration && $ifoodIntegration->active == 1) {
+            // Verifica a validade dos tokens
+            $currentTime = time();
+
+            try {
+                // Decodifica o access token
+                $accessTokenData = json_decode(base64_decode(explode('.', $ifoodIntegration->access_token)[1]), true);
+                if ($accessTokenData['exp'] < $currentTime) {
+                    return response()->json(['status' => false], 200);
+                }
+
+                // Decodifica o refresh token
+                $refreshTokenData = json_decode(base64_decode(explode('.', $ifoodIntegration->refresh_token)[1]), true);
+                if ($refreshTokenData['exp'] < $currentTime) {
+                    return response()->json(['status' => false], 200);
+                }
+            } catch (\Exception $e) {
+                return response()->json(['status' => false], 500);
+            }
+
+            // Se tudo estiver correto
+            return response()->json(['status' => true], 200);
+        } else {
+            return response()->json(['status' => false], 200);
+        }
+    }
+
+    public function getOrders()
+    {
+        $orders = IfoodOrder::all();
+
+        return response()->json([
+            'orders' => $orders
+        ]);
     }
 }
