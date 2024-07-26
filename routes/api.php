@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GerencianetController;
 use App\Http\Controllers\IfoodIntegrationController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
@@ -108,6 +109,10 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/balance', [WalletController::class, 'getBalance']);
         Route::post('/deposit', [WalletController::class, 'deposit']);
         Route::post('/withdraw', [WalletController::class, 'withdraw']);
+    });
+
+    Route::group(['prefix' => 'gerencianet'], function () {
+        Route::post('/pix/qrcode', [GerencianetController::class, 'generatePixQRCode']);
     });
 });
 
