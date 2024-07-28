@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GerencianetController;
 use App\Http\Controllers\IfoodIntegrationController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -113,6 +114,11 @@ Route::middleware('auth:api')->group(function () {
 
     Route::group(['prefix' => 'gerencianet'], function () {
         Route::post('/pix/qrcode', [GerencianetController::class, 'generatePixQRCode']);
+        Route::post('/payments/credit-card', [GerencianetController::class, 'createCreditCardPayment']);
+    });
+
+    Route::group(['prefix' => 'transactions'], function () {
+        Route::get('', [TransactionController::class, 'index']);
     });
 });
 

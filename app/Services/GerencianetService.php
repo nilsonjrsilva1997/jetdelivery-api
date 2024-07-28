@@ -60,4 +60,66 @@ class GerencianetService
             throw new \Exception('Error generating Pix QR Code: ' . $e->getMessage());
         }
     }
+
+    public function createCreditCardPayment($orderDetails, $cardDetails)
+{
+    $gerencianet = new Gerencianet($this->options);
+
+    // Passo 1: Criar a cobrança
+    $body = [
+        'items' => [
+            [
+                'name' => $orderDetails['item_name'],
+                'amount' => 1,
+                'value' => $orderDetails['amount']
+            ]
+        ]
+    ];
+
+    try {
+        // Criar a cobrança
+        $chargeResponse = $gerencianet->createCharge([], $body);
+
+        Log::info('Gerencianet createCharge response: ' . json_encode($chargeResponse));
+
+        if (!isset($chargeResponse['data']['charge_id'])) {
+            throw new \Exception('Failed to create charge: ' . json_encode($chargeResponse));
+        }
+
+        $chargeId = $chargeResponse['data']['charge_id'];
+
+        // Passo 2: Pagar a cobrança
+        $payment = [
+            'credit_card' => [
+                'installments' => 1,
+                'payment_token' => $cardDetails['payment_token'],
+                'billing_address' => [
+                    'street' => $cardDetails['billing_address']['street'],
+                    'number' => $cardDetails['billing_address']['number'],
+                    'neighborhood' => $cardDetails['billing_address']['neighborhood'],
+                    'zipcode' => $cardDetails['billing_address']['zipcode'],
+                    'city' => $cardDetails['billing_address']['city'],
+                    'state' => $cardDetails['billing_address']['state']
+                ],
+                'customer' => [
+                    'name' => $cardDetails['customer_name'],
+                    'cpf' => $cardDetails['customer_cpf'],
+                    'phone_number' => $cardDetails['customer_phone']
+                ]
+            ]
+        ];
+
+        $paymentBody = ['payment' => $payment];
+
+        // Pagar a cobrança
+        $paymentResponse = $gerencianet->payCharge(['id' => $chargeId], $paymentBody);
+
+        Log::info('Gerencianet payCharge response: ' . json_encode($paymentResponse));
+
+        return $paymentResponse;
+    } catch (\Exception $e) {
+        Log::error('Error processing credit card payment: ' . $e->getMessage());
+        throw new \Exception('Error processing credit card payment: ' . $e->getMessage());
+    }
+}
 }
