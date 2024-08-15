@@ -12,7 +12,7 @@ class WalletController extends Controller
     {
         $user = User::find(Auth::id());
 
-        return response()->json(['balance' => $user->balance]);
+        return response()->json(['balance' => $user->balanceFloat]);
     }
 
     public function deposit(Request $request)
@@ -23,7 +23,7 @@ class WalletController extends Controller
 
         $user = User::find(Auth::id());
 
-        $user->deposit($validatedData['amount']);
+        $user->depositFloat($validatedData['amount'], ['description' => 'payment of taxes']);
 
         return response()->json(['balance' => $user->balance]);
     }
@@ -36,7 +36,9 @@ class WalletController extends Controller
 
         $user = User::find(Auth::id());
 
-        $user->withdraw($validatedData['amount']);
+        
+
+        $user->withdrawFloat($validatedData['amount'], ['description' => 'payment of taxes']);
 
         return response()->json(['balance' => $user->balance]);
     }

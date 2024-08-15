@@ -13,7 +13,7 @@ class IfoodOrder extends Model
     protected $table = 'ifood_orders';
 
     protected $fillable = [
-        'data_ifood', 'restaurant_id'
+        'data_ifood', 'restaurant_id', 'order_id'
     ];
 
     protected $casts = [
