@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\GerencianetController;
 use App\Http\Controllers\IfoodIntegrationController;
 use App\Http\Controllers\PaymentController;
@@ -32,6 +33,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/teste', function (Request $request) {
         return 'testando';
     });
+
+    
+    Route::group(['prefix' => 'deliveries'], function () {
+        Route::get('', [DeliveryController::class, 'index']);
+        Route::get('/{id}', [DeliveryController::class, 'show']);
+        Route::post('', [DeliveryController::class, 'store']); 
+        Route::put('/deliveries/{id}/status', [DeliveryController::class, 'updateStatus']);  
+    });
     
     Route::group(['prefix' => 'addresses'], function () {
         Route::get('', [AddressController::class, 'index']);
@@ -49,8 +58,6 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/{customer}', [CustomerController::class, 'update']);
         Route::delete('/{customer}', [CustomerController::class, 'destroy']);
     });
-
-    
 
     Route::group(['prefix' => 'order-statuses'], function () {
         Route::get('/', [OrderStatusController::class, 'index']);

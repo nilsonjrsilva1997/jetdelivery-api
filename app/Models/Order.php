@@ -53,4 +53,9 @@ class Order extends Model
     {
         return $this->belongsTo(DeliveryPeople::class, 'delivery_people_id');
     }
+
+    public function ifoodOrders()
+    {
+        return $this->hasOne(IfoodOrder::class);
+    }
 }

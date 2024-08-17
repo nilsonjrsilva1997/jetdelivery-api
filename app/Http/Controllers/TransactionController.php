@@ -3,27 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        // Verifique se há parâmetros de consulta para filtrar as transações
-        $query = Transaction::query();
+        // Obter o usuário autenticado
+        $user = User::where('id', Auth::id())->with('wallet')->first();
 
-        if ($request->has('type')) {
-            $query->where('type', $request->input('type'));
-        }
+        // Obter o wallet_id do usuário
+        $walletId = $user->wallet->id;
 
-        if ($request->has('confirmed')) {
-            $query->where('confirmed', $request->input('confirmed'));
-        }
+        // Obter a data e hora atual menos 36 horas
+        // $cutoffDate = Carbon::now()->subHours(36);
 
-        // Adicione mais filtros conforme necessário
+        // Número de itens por página (pode ser ajustado conforme necessário)
+        $perPage = $request->get('per_page', 5); // Default to 10 items per page if 'per_page' is not provided
 
-        // Obtenha as transações paginadas
-        $transactions = $query->paginate(10);
+        // Filtrar transações pelo wallet_id do usuário autenticado
+        $transactions = Transaction::where('wallet_id', $walletId)
+            // ->where('created_at', '>=', $cutoffDate)
+            ->orderBy('created_at', 'desc') // Ordenar pelos mais recentes
+            ->paginate($perPage); // Use pagination
 
         return response()->json($transactions);
     }

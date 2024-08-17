@@ -25,4 +25,9 @@ class IfoodOrder extends Model
     {
         return $this->belongsTo(Restaurant::class);
     }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
