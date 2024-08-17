@@ -3,41 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\CieloService;
+use MercadoPago\SDK;
+use MercadoPago\Payment;
 
 class PaymentController extends Controller
 {
-    protected $cieloService;
-
-    public function __construct(CieloService $cieloService)
+    public function __construct()
     {
-        $this->cieloService = $cieloService;
+        // Configurações do Mercado Pago
+        SDK::setAccessToken(env('MERCADO_PAGO_ACCESS_TOKEN'));
     }
 
-    public function processCreditCardPayment(Request $request)
+    public function processPayment(Request $request)
     {
-        $paymentData = [
-            'MerchantOrderId' => '2021001',
-            'Customer' => [
-                'Name' => 'Comprador Teste'
-            ],
-            'Payment' => [
-                'Type' => 'CreditCard',
-                'Amount' => 15700,
-                'Installments' => 1,
-                'SoftDescriptor' => 'Teste',
-                'CreditCard' => [
-                    'CardNumber' => '1234123412341231',
-                    'Holder' => 'Comprador T',
-                    'ExpirationDate' => '12/2030',
-                    'SecurityCode' => '123',
-                    'Brand' => 'Visa'
-                ]
-            ]
-        ];
+        // Valida os dados recebidos
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'token' => 'required|string',
+            'description' => 'required|string',
+            'installments' => 'required|integer|min:1',
+            'payer_email' => 'required|email',
+            'payment_method_id' => 'required|string', // Adiciona o método de pagamento aqui
+        ]);
 
-        $response = $this->cieloService->createCreditCardPayment($paymentData);
+        try {
+            $payment = new Payment();
+            $payment->transaction_amount = $request->input('amount');
+            $payment->token = $request->input('token');
+            $payment->description = $request->input('description');
+            $payment->installments = $request->input('installments');
+            $payment->payment_method_id = $request->input('payment_method_id'); // Recebe o método de pagamento
+            $payment->payer_email = $request->input('payer_email');
+            $payment->save();
 
-        return response()->json($response);
+            if ($payment->status === 'approved') {
+                return response()->json(['message' => 'Pagamento aprovado', 'payment' => $payment], 200);
+            } else {
+                return response()->json(['message' => 'Pagamento não aprovado', 'payment' => $payment], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erro ao processar pagamento', 'error' => $e->getMessage()], 500);
+        }
     }
 }

@@ -124,6 +124,8 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/pix/qrcode', [GerencianetController::class, 'generatePixQRCode']);
         Route::post('/payments/credit-card', [GerencianetController::class, 'createCreditCardPayment']);
     });
+    
+    Route::post('/payment/process', [PaymentController::class, 'processPayment']);
 
     Route::group(['prefix' => 'payments'], function () {
         Route::post('cielo/credit-card', [PaymentController::class, 'processCreditCardPayment']);
