@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Auth;
 
 class DeliveryController extends Controller
 {
+
+    public function deliveriesForDeliverymans()
+    {
+        return Delivery::all();
+    }
+
     public function index(Request $request)
     {
         // Obter os IDs dos restaurantes associados ao usuário autenticado
@@ -27,23 +33,6 @@ class DeliveryController extends Controller
         $query = Delivery::whereHas('orders', function($query) use ($restaurantIds) {
             $query->whereIn('restaurant_id', $restaurantIds);
         });
-
-        // Aplicar filtros, se fornecidos (descomentados se necessário)
-        // $status = $request->query('status'); // Exemplo de filtro por status
-        // $fromDate = $request->query('from_date'); // Data inicial
-        // $toDate = $request->query('to_date'); // Data final
-
-        // if ($status) {
-        //     $query->where('delivery_status_id', $status);
-        // }
-
-        // if ($fromDate) {
-        //     $query->where('created_at', '>=', $fromDate);
-        // }
-
-        // if ($toDate) {
-        //     $query->where('created_at', '<=', $toDate);
-        // }
 
         // Ordenar despachos do mais novo para o mais antigo
         $query->orderBy('created_at', 'desc');
