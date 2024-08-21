@@ -17,7 +17,7 @@ class DeliveryController extends Controller
 
     public function deliveriesForDeliverymans()
     {
-        return Delivery::all();
+        return Delivery::with('orders', 'status')->get();
     }
 
     public function index(Request $request)

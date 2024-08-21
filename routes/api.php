@@ -33,7 +33,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/teste', function (Request $request) {
         return 'testando';
     });
-
     
     Route::group(['prefix' => 'deliveries'], function () {
         Route::get('', [DeliveryController::class, 'index']);
