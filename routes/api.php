@@ -125,6 +125,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/payments/credit-card', [GerencianetController::class, 'createCreditCardPayment']);
     });
     
+    Route::post('/mercadopago/token', [PaymentController::class, 'generateToken']);
     Route::post('/payment/process', [PaymentController::class, 'processPayment']);
 
     Route::group(['prefix' => 'payments'], function () {

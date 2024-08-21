@@ -117,7 +117,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('LaravelAuthApp')->accessToken;
 
-        return response()->json(['token' => $token], 201);
+        return response()->json(['token' => $token, 'user' => $user], 201);
     }
 
     public function logout(Request $request)
