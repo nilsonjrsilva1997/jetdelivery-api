@@ -150,7 +150,7 @@ class DeliveryController extends Controller
     public function show($id)
     {
         try {
-            $delivery = Delivery::with('status', 'orders', 'orders.customer', 'orders.deliveryAddress', 'orders.paymentMethod', 'orders.deliveryPerson', 'orders.orderStatus')->findOrFail($id);
+            $delivery = Delivery::with('status', 'orders', 'orders.customer', 'orders.deliveryAddress', 'orders.paymentMethod', 'orders.deliveryPerson', 'orders.orderStatus', 'order.restaurant')->findOrFail($id);
             return response()->json($delivery);
         } catch (Exception $e) {
             return response()->json(['error' => 'Delivery not found'], 404);
