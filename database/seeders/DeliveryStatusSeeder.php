@@ -20,6 +20,7 @@ class DeliveryStatusSeeder extends Seeder
             'En Route',
             'Delivery Completed',
             'Collected', // Adicionando o novo status
+            'Collection Started'
         ];
 
         foreach ($statuses as $status) {
