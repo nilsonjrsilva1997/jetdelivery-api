@@ -13,11 +13,24 @@ class DeliveryStatusSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('delivery_statuses')->insert([
-            ['status_name' => 'Pending Courier'],
-            ['status_name' => 'Courier Accepted Delivery'],
-            ['status_name' => 'En Route'],
-            ['status_name' => 'Delivery Completed'],
-        ]);
+        // Lista de statuses que você deseja adicionar
+        $statuses = [
+            'Pending Courier',
+            'Courier Accepted Delivery',
+            'En Route',
+            'Delivery Completed',
+            'Collected', // Adicionando o novo status
+        ];
+
+        foreach ($statuses as $status) {
+            // Verifica se o status já existe antes de inserir
+            if (!DB::table('delivery_statuses')->where('status_name', $status)->exists()) {
+                DB::table('delivery_statuses')->insert([
+                    'status_name' => $status,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
     }
 }
