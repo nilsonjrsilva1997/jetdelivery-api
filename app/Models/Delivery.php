@@ -9,7 +9,7 @@ class Delivery extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['fee', 'delivery_status_id'];
+    protected $fillable = ['delivery_people_id', 'fee', 'delivery_status_id'];
 
     public function orders()
     {
@@ -19,5 +19,15 @@ class Delivery extends Model
     public function status()
     {
         return $this->belongsTo(DeliveryStatus::class, 'delivery_status_id', 'id');
+    }
+
+    public function delivery_people()
+    {
+        return $this->belongsTo(DeliveryPeople::class, 'delivery_people_id', 'id');
+    }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(DeliveryStatusHistory::class);
     }
 }

@@ -39,7 +39,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('delivery_peoples', [DeliveryController::class, 'deliveriesForDeliverymans']);
         Route::get('/{id}', [DeliveryController::class, 'show']);
         Route::post('', [DeliveryController::class, 'store']); 
-        Route::put('/deliveries/{id}/status', [DeliveryController::class, 'updateStatus']);  
+        Route::put('/{id}/status', [DeliveryController::class, 'updateStatus']);  
+        Route::put('/{id}/status_delivery_people', [DeliveryController::class, 'updateStatusDeliveryPeople']);  
     });
     
     Route::group(['prefix' => 'addresses'], function () {

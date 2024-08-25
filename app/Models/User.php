@@ -48,7 +48,7 @@ class User extends Authenticatable implements Wallet
 
     public function delivery_peoples()
     {
-        return $this->hasMany(DeliveryPeople::class);
+        return $this->hasOne(DeliveryPeople::class);
     }
 
     public function restaurants()

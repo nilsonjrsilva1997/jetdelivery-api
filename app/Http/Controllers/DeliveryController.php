@@ -7,6 +7,7 @@ use App\Enums\OrderStatusEnum;
 use Illuminate\Http\Request;
 use App\Models\Delivery;
 use App\Models\DeliveryStatus;
+use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\User;
 use Exception;
@@ -105,6 +106,47 @@ class DeliveryController extends Controller
         return response()->json(['message' => 'Delivery status updated successfully'], 200);
     }
 
+    public function updateStatusDeliveryPeople(Request $request, $id)
+    {
+        // Validação dos dados recebidos
+        $validatedData = $request->validate([
+            'delivery_status_id' => 'required|integer|exists:delivery_statuses,id'
+        ]);
+    
+        // Busca a entrega e o ID do delivery_people
+        $delivery = Delivery::find($id);
+        $deliveryPeopleId = User::where('id', Auth::id())->with('delivery_peoples')->first()->delivery_peoples->id;
+    
+        // Verifica se a entrega e o delivery_people existem
+        if (!$delivery) {
+            return response()->json(['message' => 'Delivery not found'], 404);
+        }
+    
+        if (!$deliveryPeopleId) {
+            return response()->json(['message' => 'DeliveryPeople not found'], 404);
+        }
+    
+        // Verifica se o status da entrega é realmente diferente
+        if ($delivery->delivery_status_id != $validatedData['delivery_status_id']) {
+            // Atualiza o status da entrega
+            $delivery->delivery_status_id = $validatedData['delivery_status_id'];
+            $delivery->delivery_people_id = $deliveryPeopleId;
+            $delivery->save();
+    
+            // Registrar a mudança de status no histórico
+            DeliveryStatusHistory::create([
+                'delivery_id' => $delivery->id,
+                'user_id' => Auth::id(),
+                'delivery_status_id' => $validatedData['delivery_status_id'],
+                // 'notes' => '',
+            ]);
+    
+            return response()->json(['message' => 'Delivery status updated successfully'], 200);
+        }
+    
+        return response()->json(['message' => 'Status is already set to the requested value'], 200);
+    }
+    
     public function show($id)
     {
         try {
