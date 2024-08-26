@@ -18,8 +18,9 @@ class DeliveryController extends Controller
 
     public function deliveriesForDeliverymans()
     {
-        return Delivery::with('orders', 'status')->get();
-    }
+        return Delivery::with('orders', 'status')
+        ->where('delivery_status_id', DeliveryStatusEnum::PENDING_COURIER)
+        ->get();    }
 
     public function index(Request $request)
     {
