@@ -9,7 +9,12 @@ class Delivery extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['delivery_people_id', 'fee', 'delivery_status_id'];
+    // Adicione a propriedade `company_fee` ao array de atributos que devem ser convertidos
+    protected $casts = [
+        'company_fee' => 'float',
+    ];
+
+    protected $fillable = ['delivery_people_id', 'fee', 'delivery_status_id', 'company_fee', 'online'];
 
     public function orders()
     {

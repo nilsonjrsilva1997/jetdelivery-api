@@ -41,6 +41,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('', [DeliveryController::class, 'store']); 
         Route::put('/{id}/status', [DeliveryController::class, 'updateStatus']);  
         Route::put('/{id}/status_delivery_people', [DeliveryController::class, 'updateStatusDeliveryPeople']);  
+        Route::post('/estimate', [DeliveryController::class, 'estimateDelivery']);
     });
     
     Route::group(['prefix' => 'addresses'], function () {
@@ -82,6 +83,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/{deliveryPeople}', [DeliveryPeopleController::class, 'show']);
         Route::put('/{deliveryPeople}', [DeliveryPeopleController::class, 'update']);
         Route::delete('/{deliveryPeople}', [DeliveryPeopleController::class, 'destroy']);
+        Route::post('/{deliveryPeopleId}/online', [DeliveryPeopleController::class, 'updateOnlineStatus']);
+        Route::get('/{deliveryPersonId}/online', [DeliveryPeopleController::class, 'checkOnlineStatus']);
     });
 
     Route::group(['prefix' => 'orders'], function () {

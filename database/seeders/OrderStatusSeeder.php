@@ -21,9 +21,12 @@ class OrderStatusSeeder extends Seeder
             ['name' => 'Cancelled'],
         ];
 
-        // Inserir os dados na tabela
+        // Inserir ou atualizar os status na tabela
         foreach ($statuses as $status) {
-            OrderStatus::create($status);
+            OrderStatus::updateOrCreate(
+                ['name' => $status['name']], // Condição para verificar se o registro já existe
+                $status // Dados para criar ou atualizar o registro
+            );
         }
     }
 }

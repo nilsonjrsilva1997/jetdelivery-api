@@ -18,16 +18,19 @@ class SettingsTableSeeder extends Seeder
                 'key' => 'base_rate',
                 'display_name' => 'Taxa Base',
                 'value' => '5.00',
+                'type' => 'fixed', // Valor fixo
             ],
             [
                 'key' => 'rate_per_km',
                 'display_name' => 'Taxa por KM',
                 'value' => '2.00',
+                'type' => 'fixed', // Valor fixo
             ],
             [
                 'key' => 'management_fee_percentage',
                 'display_name' => 'Taxa de Gestão Percentual',
                 'value' => '10',
+                'type' => 'percentage', // Percentual
             ],
         ];
 

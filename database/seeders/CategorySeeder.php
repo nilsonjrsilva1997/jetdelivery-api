@@ -26,8 +26,12 @@ class CategorySeeder extends Seeder
             ['name' => 'Americana'],
         ];
 
+        // Inserir ou atualizar as categorias na tabela
         foreach ($categories as $category) {
-            Category::create($category);
+            Category::updateOrCreate(
+                ['name' => $category['name']], // Condição para verificar se o registro já existe
+                $category // Dados para criar ou atualizar o registro
+            );
         }
     }
 }

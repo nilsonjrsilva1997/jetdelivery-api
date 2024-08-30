@@ -29,8 +29,8 @@ class GeocodeAddressJob implements ShouldQueue
         $coordinates = $geocodingService->geocodeAddress(formatAddress($this->address));
 
         if ($coordinates) {
-            $this->address->latitude = $coordinates['lat'];
-            $this->address->longitude = $coordinates['lng'];
+            $this->address->latitude = $coordinates['latitude'];
+            $this->address->longitude = $coordinates['longitude'];
             $this->address->save();
         }
     }

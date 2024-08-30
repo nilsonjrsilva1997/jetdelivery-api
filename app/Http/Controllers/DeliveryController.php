@@ -9,18 +9,39 @@ use App\Models\Delivery;
 use App\Models\DeliveryStatus;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
+use App\Models\Restaurant;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\MapboxService;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 
 class DeliveryController extends Controller
 {
+    protected $mapboxService;
+
+    public function __construct(MapboxService $mapboxService)
+    {
+        $this->mapboxService = $mapboxService;
+    }
 
     public function deliveriesForDeliverymans()
     {
-        return Delivery::with('orders', 'status')
-        ->where('delivery_status_id', DeliveryStatusEnum::PENDING_COURIER)
-        ->get();    }
+         // Buscar entregas com status PENDING_COURIER
+        $deliveries = Delivery::with('orders', 'status')
+            ->where('delivery_status_id', DeliveryStatusEnum::PENDING_COURIER)
+            ->get();
+
+        // Adicionar o campo `adjusted_fee` para cada entrega
+        $deliveries->transform(function ($delivery) {
+            // Garantir que `company_fee` está definido
+            $delivery->company_fee = $delivery->company_fee ?? 0; // Define `company_fee` como 0 se for NULL
+            $delivery->adjusted_fee = $delivery->fee - $delivery->company_fee;
+            return $delivery;
+        });
+
+        return response()->json($deliveries);
+    }
 
     public function index(Request $request)
     {
@@ -70,20 +91,120 @@ class DeliveryController extends Controller
             ], 400);
         }
 
+        // Obter as configurações para cálculos
+        $baseRate = (float) Setting::getValue('base_rate', 0);
+        $ratePerKm = (float) Setting::getValue('rate_per_km', 0);
+        $managementFeePercentage = (float) Setting::getValue('management_fee_percentage', 0);
+
+        // Obter detalhes dos pedidos
+        $orders = Order::whereIn('id', $validatedData['order_ids'])->get();
+
+        // obter endereço do restaurante
+        $restaurantAddress = User::where('id', Auth::id())->with('restaurants.address')->first()->restaurants[0]->address;
+
+        // Obter coordenadas dos pedidos (supondo que você tem isso armazenado de alguma forma)
+        $origin = $restaurantAddress->longitude .','. $restaurantAddress->latitude; // Coordenada de origem
+        
+        $destinations = $orders->map(function ($order) {
+            return $order->deliveryAddress->longitude . ',' . $order->deliveryAddress->latitude;
+        })->toArray();
+
+        // Adicionar a coordenada de destino final (se necessário) 
+        $destinations[] = $destinations[0]; // Para completar o percurso de volta ao ponto de origem (se necessário)
+
+        try {
+            // Calcular a distância total entre pontos adjacentes
+            $totalDistance = $this->mapboxService->getDrivingDistance(array_merge([$origin], $destinations));
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+        // Calcular o valor da taxa
+        $fee = $baseRate + ($ratePerKm * $totalDistance);
+
+        // Calcular a taxa de gestão
+        $companyFee = ($fee * $managementFeePercentage) / 100;
+
+        $user = User::find(Auth::id());
+
+        if($user->balanceFloat >= $fee) {
+            // return 'pode fazer o pedido';
+        } else {
+            return response()->json(['message' => 'Saldo insuficiente para fazer pedidos, recarregue'], 500);
+        }
+
         // Criar o despacho (delivery)
         $delivery = Delivery::create([
-            'fee' => 20, // calcular o valor da taxa
+            'fee' => $fee, // Usar o valor calculado da taxa
+            'company_fee' => $companyFee, // Usar o valor calculado da taxa de gestão
             'delivery_status_id' => DeliveryStatusEnum::PENDING_COURIER,
         ]);
 
         // Associar os pedidos ao despacho
         $delivery->orders()->sync($validatedData['order_ids']);
 
-          // Atualizar o status dos pedidos
-          Order::whereIn('id', $validatedData['order_ids'])
-          ->update(['order_status_id' => OrderStatusEnum::PROCESSING]); // Ou o status apropriado
+        // Atualizar o status dos pedidos
+        Order::whereIn('id', $validatedData['order_ids'])
+            ->update(['order_status_id' => OrderStatusEnum::PROCESSING]); // Ou o status apropriado
+
+        $user->withdrawFloat((float)($fee - $companyFee), ['description' => 'Pagamento de entrega']);
+        $user->withdrawFloat((float)$companyFee, ['description' => 'Pagamento de taxa']);
 
         return response()->json(['message' => 'Despacho criado com sucesso!'], 201);
+    }
+
+    public function estimateDelivery(Request $request)
+    {
+        // Validar os dados recebidos
+        $validatedData = $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'exists:orders,id',
+        ]);
+
+        // Obter as configurações para cálculos
+        $baseRate = (float) Setting::getValue('base_rate', 0);
+        $ratePerKm = (float) Setting::getValue('rate_per_km', 0);
+        $managementFeePercentage = (float) Setting::getValue('management_fee_percentage', 0);
+
+        // Obter detalhes dos pedidos
+        $orders = Order::whereIn('id', $validatedData['order_ids'])->get();
+
+        // obter endereço do restaurante
+        $restaurantAddress = User::where('id', Auth::id())->with('restaurants.address')->first()->restaurants[0]->address;
+
+        // Obter coordenadas dos pedidos
+        $origin = $restaurantAddress->longitude . ',' . $restaurantAddress->latitude; // Coordenada de origem
+        
+        $destinations = $orders->map(function ($order) {
+            return $order->deliveryAddress->longitude . ',' . $order->deliveryAddress->latitude;
+        })->toArray();
+
+        // Adicionar a coordenada de destino final (se necessário) 
+        $destinations[] = $destinations[0]; // Para completar o percurso de volta ao ponto de origem (se necessário)
+
+        try {
+            // Calcular a distância total entre pontos adjacentes
+            $totalDistance = $this->mapboxService->getDrivingDistance(array_merge([$origin], $destinations));
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+        // Calcular o valor da taxa
+        $fee = $baseRate + ($ratePerKm * $totalDistance);
+
+        // Calcular a taxa de gestão
+        $companyFee = ($fee * $managementFeePercentage) / 100;
+
+        // Estimar o valor ajustado
+        $adjustedFee = $fee - $companyFee;
+
+        // Retornar a estimativa
+        return response()->json([
+            'total_distance' => $totalDistance,
+            'fee' => $fee,
+            'company_fee' => $companyFee,
+            'adjusted_fee' => $adjustedFee,
+        ]);
     }
 
     public function updateStatus(Request $request, $id)

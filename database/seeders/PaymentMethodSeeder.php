@@ -28,9 +28,12 @@ class PaymentMethodSeeder extends Seeder
             ],
         ];
 
-        // Inserir os métodos de pagamento na tabela
+        // Inserir os métodos de pagamento na tabela se não existirem
         foreach ($paymentMethods as $paymentMethod) {
-            PaymentMethod::create($paymentMethod);
+            PaymentMethod::updateOrCreate(
+                ['name' => $paymentMethod['name']], // Condição para verificar se o registro já existe
+                $paymentMethod // Dados para criar ou atualizar o registro
+            );
         }
     }
 }

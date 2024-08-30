@@ -56,4 +56,44 @@ class DeliveryPeopleController extends Controller
         $deliveryPeople->delete();
         return response()->json(null, 204);
     }
+
+    /**
+     * Atualiza o status online de um entregador.
+     */
+    public function updateOnlineStatus(Request $request, $deliveryPersonId)
+    {
+        // Valida a requisição
+        $request->validate([
+            'online' => 'required|boolean',
+        ]);
+
+        // Encontra o entregador pelo ID
+        $deliveryPerson = DeliveryPeople::find($deliveryPersonId);
+
+        if (!$deliveryPerson) {
+            return response()->json(['message' => 'Entregador não encontrado'], 404);
+        }
+
+        // Atualiza o status online
+        $deliveryPerson->online = $request->input('online');
+        $deliveryPerson->save();
+
+        return response()->json(['message' => 'Status online atualizado com sucesso']);
+    }
+
+    /**
+     * Verifica o status online de um entregador.
+     */
+    public function checkOnlineStatus($deliveryPersonId)
+    {
+        // Encontra o entregador pelo ID
+        $deliveryPerson = DeliveryPeople::find($deliveryPersonId);
+
+        if (!$deliveryPerson) {
+            return response()->json(['message' => 'Entregador não encontrado'], 404);
+        }
+
+        // Retorna o status online
+        return response()->json(['online' => $deliveryPerson->online]);
+    }
 }
